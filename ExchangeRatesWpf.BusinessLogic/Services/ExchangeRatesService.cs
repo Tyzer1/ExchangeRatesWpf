@@ -60,8 +60,8 @@ public class ExchangeRatesService : IExchangeRatesService
                     {
                         Name = x.Name,
                         Nominal = x.Nominal,
-                        ValueRub = String.Format("{0:0.##}", double.Parse(x.Value) / double.Parse(x.Nominal)),
-                        ValueUsd = String.Format("{0:0.##}", double.Parse(x.Value) / double.Parse(x.Nominal) / usdToRubByDate),
+                        ValueRub = String.Format("{0:0.##}", double.Parse(x.Value)),
+                        ValueUsd = String.Format("{0:0.##}", double.Parse(x.Value) / usdToRubByDate),
                         DifferenceRubInPercent = GetDifferenceRub(todayRates.FirstOrDefault(y => y.CharCode == x.CharCode),
                             x),
                         DifferenceUsdInPercent = GetDifferenceUsd(todayRates.FirstOrDefault(y => y.CharCode == x.CharCode),

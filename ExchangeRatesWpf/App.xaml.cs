@@ -1,5 +1,6 @@
 ﻿using Autofac;
 using Autofac.Features.ResolveAnything;
+using ControlzEx.Theming;
 using ExchangeRatesWpf.BusinessLogic.Module;
 using ExchangeRatesWpf.Presentation.Module;
 using System.Windows;
@@ -18,6 +19,8 @@ namespace ExchangeRatesWpf.Presentation
             var builder = new ContainerBuilder();
             builder.RegisterModule<PresentationModule>();
             Container = builder.Build();
+
+            ThemeManager.Current.ChangeTheme(this, "Light.Olive");
         }
     }
 }

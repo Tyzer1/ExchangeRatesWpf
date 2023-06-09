@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System;
-using System.Collections.ObjectModel;
 using System.Linq;
 using CommunityToolkit.Mvvm.ComponentModel;
 using ExchangeRatesWpf.BusinessLogic.Interfaces;
@@ -8,6 +7,7 @@ using Autofac;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
 using ExchangeRatesWpf.Presentation.Models;
+using System.Windows.Controls;
 
 namespace ExchangeRatesWpf.Presentation.ViewModels;
 
@@ -74,8 +74,9 @@ public partial class MainWindowViewModel : ObservableObject
     private async void UpdateValuteCodes()
     {
         var rates = await _exchangeRatesService.GetRatesByDateAsync(DateTime.Now);
+        var searchToUpper = Search.ToUpper();
         ValuteNames = new List<Valute>(
-            rates.Where(x => x.CharCode.Contains(Search) || x.Name.Contains(Search))
+            rates.Where(x => x.CharCode.ToUpper().Contains(searchToUpper) || x.Name.ToUpper().Contains(searchToUpper))
             .Select(x => new Valute
             {
                 Name = x.Name,
@@ -103,41 +104,73 @@ public partial class MainWindowViewModel : ObservableObject
 
     partial void OnValuteOneNameChanged(string value)
     {
-        if (_valuteOneName != null && _valuteTwoName != null && _valuteOneValue != null)
-            ConvertValueOne();
+        var isDouble = double.TryParse(_valuteOneValue, out var doubleValue);
+        if (isDouble 
+            && _valuteOneName != null 
+            && _valuteTwoName != null 
+            && _valuteOneValue != null)
+        {
+            ConvertAndFormatValuteOne(doubleValue);
+        }
     }
 
     partial void OnValuteTwoNameChanged(string value)
     {
-        if (_valuteOneName != null && _valuteTwoName != null && _valuteOneValue != null)
-            ConvertValueOne();
+        var isDouble = double.TryParse(_valuteOneValue, out var doubleValue);
+        if (isDouble 
+            && _valuteOneName != null 
+            && _valuteTwoName != null 
+            && _valuteOneValue != null)
+        {
+            ConvertAndFormatValuteOne(doubleValue);
+        }
     }
 
-    partial void OnValuteOneValueChanged(string value)
+    [RelayCommand]
+    private void ConvertValueOne(TextChangedEventArgs e)
     {
-        if (_valuteOneName != null && _valuteTwoName != null && _valuteOneValue != null)
-            ConvertValueOne();
+        var textBox = (TextBox)e.Source;
+        var value = textBox.Text;
+        var isDouble = double.TryParse(value, out var doubleValue);
+        if (isDouble 
+            && textBox.IsFocused 
+            && _valuteOneName != null 
+            && _valuteTwoName != null 
+            && !String.IsNullOrEmpty(value))
+        {
+            ConvertAndFormatValuteOne(doubleValue);
+        }
     }
 
-    partial void OnValuteTwoValueChanged(string value)
+    [RelayCommand]
+    private void ConvertValueTwo(TextChangedEventArgs e)
     {
-        if (_valuteOneName != null && _valuteTwoName != null && _valuteTwoValue != null)
-            ConvertValueTwo();
+        var textBox = (TextBox)e.Source;
+        var value = textBox.Text;
+        var isDouble = double.TryParse(value, out var doubleValue);
+        if (isDouble 
+            && textBox.IsFocused 
+            && _valuteOneName != null 
+            && _valuteTwoName != null 
+            && !String.IsNullOrEmpty(value))
+        {
+            ConvertAndFormatValuteTwo(doubleValue);
+        }
     }
 
-    private async void ConvertValueOne()
+    private async void ConvertAndFormatValuteOne(double value)
     {
-        var convertedValue = await Convert(_valuteOneName, _valuteTwoName, double.Parse(_valuteOneValue));
+        var convertedValue = await ConvertAsync(_valuteOneName, _valuteTwoName, value);
         ValuteTwoValue = String.Format("{0:0.##}", convertedValue);
     }
-    
-    private async void ConvertValueTwo()
+
+    private async void ConvertAndFormatValuteTwo(double value)
     {
-        var convertedValue = await Convert(_valuteTwoName, _valuteOneName, double.Parse(_valuteTwoValue));
+        var convertedValue = await ConvertAsync(_valuteTwoName, _valuteOneName, value);
         ValuteOneValue = String.Format("{0:0.##}", convertedValue);
     }
 
-    private async Task<double> Convert(string valuteFromName, string valuteToName, double value)
+    private async Task<double> ConvertAsync(string valuteFromName, string valuteToName, double value)
     {
         var valuteFrom = _valutes.FirstOrDefault(x => x.Name == valuteFromName);
         var valuteTo = _valutes.FirstOrDefault(x => x.Name == valuteToName);
